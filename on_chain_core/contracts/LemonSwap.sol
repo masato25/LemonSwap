@@ -3,6 +3,7 @@
 pragma solidity 0.7.6;
 pragma experimental ABIEncoderV2;
 
+import "hardhat/console.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {PositionValue} from "@uniswap/v3-periphery/contracts/libraries/PositionValue.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
@@ -47,9 +48,16 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
         IUniswapV3Pool unipoolInstance = IUniswapV3Pool(_strategyParams.uniswapPool);
         address token0 = unipoolInstance.token0();
         address token1 = unipoolInstance.token1();
-        address provideToken = _strategyParams.provideToken0
-            ? unipoolInstance.token0()
-            : unipoolInstance.token1();
+        bool provideToken0 = _strategyParams.provideToken0;
+        address provideToken = provideToken0
+            ? token0
+            : token1;
+        console.log(provideToken0, provideToken);
+        IERC20(provideToken).transferFrom(
+            msg.sender,
+            address(this),
+            _strategyParams.tokenAmount
+        );
         IERC20(provideToken).approve(
             UNI_POSITION_MANAGER,
             _strategyParams.tokenAmount
@@ -60,12 +68,12 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
                 token0: token0,
                 token1: token1,
                 fee: uniFee,
-                tickLower: _strategyParams.upperPriceTick,
-                tickUpper: _strategyParams.lowerPriceTick,
-                amount0Desired: _strategyParams.provideToken0
+                tickLower: _strategyParams.lowerPriceTick,
+                tickUpper: _strategyParams.upperPriceTick,
+                amount0Desired: provideToken0
                     ? _strategyParams.tokenAmount
                     : 0,
-                amount1Desired: _strategyParams.provideToken0
+                amount1Desired: provideToken0
                     ? 0
                     : _strategyParams.tokenAmount,
                 amount0Min: 0,
@@ -74,6 +82,7 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
                 deadline: block.timestamp
             });
         (, int24 tick, , , , , ) = unipoolInstance.slot0();
+        console.log(uint256(tick));
         (uint256 tokenId, , , ) = INonfungiblePositionManager(
             UNI_POSITION_MANAGER
         ).mint(params);
@@ -82,7 +91,7 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
             unipool: _strategyParams.uniswapPool,
             positionId: tokenId,
             owner: msg.sender,
-            provideToken0: _strategyParams.provideToken0,
+            provideToken0: provideToken0,
             provideTokenAmountAtStart: _strategyParams.tokenAmount,
             positionCreateTimestamp: block.timestamp,
             startPriceTick: tick,
@@ -92,6 +101,7 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
 
         positions[_newPosition.positionId] = _newPosition;
         userPositionIds[msg.sender].push(_newPosition.positionId);
+        totalPositions = totalPositions.add(1);
     }
 
     function getPositionTokenAmount(
@@ -146,7 +156,7 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
         uint256 _positionId
     ) external nonReentrant {
       Positions.Position memory _position = positions[_positionId];
-      require(_position.owner == msg.sender || checkSwapComplete(_positionId));
+      require(_position.owner == msg.sender || checkSwapComplete(_positionId), "01");
       _closePosition(_positionId);
     }
 
@@ -189,8 +199,8 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
               memory collectParams = INonfungiblePositionManager.CollectParams({
                   tokenId: _positionId,
                   recipient: address(this),
-                  amount0Max: uint128(token0FeeAmount),
-                  amount1Max: uint128(token1FeeAmount)
+                  amount0Max: type(uint128).max,
+                  amount1Max: type(uint128).max
               });
 
           (uint256 amount0, uint256 amount1) = INonfungiblePositionManager(
@@ -200,14 +210,15 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
           IUniswapV3Pool unipoolInstance = IUniswapV3Pool(_position.unipool);
           address token0 = unipoolInstance.token0();
           address token1 = unipoolInstance.token1();
-          uint256 token0Send = token0Amount.add(amount0);
-          uint256 token1Send = token1Amount.add(amount1);
-          address receiver = _position.owner;
-          IERC20(token0).transfer(receiver, token0Send);
-          IERC20(token1).transfer(receiver, token1Send);
+          if (amount0 > 0) {
+            IERC20(token0).transfer(_position.owner, amount0);
+          }
+          if (amount1 > 0) {
+            IERC20(token1).transfer(_position.owner, amount1);
+          }
         }
 
-        // scope to avoid stack too deep errors
+        // // scope to avoid stack too deep errors
         {
           // _removePositionAndReorder
           delete positions[_positionId];

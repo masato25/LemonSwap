@@ -16,6 +16,23 @@ import "./LemonSwapLibs.sol";
 
 contract LemonSwap is ReentrancyGuardUpgradeable {
     using SafeMath for uint256;
+
+    event OpenPosition(
+        address indexed owner,
+        uint256 indexed positionId,
+        address unipool,
+        uint256 provideTokenAmount
+    );
+    event ClosePosition(
+        address indexed owner,
+        uint256 indexed positionId,
+        address submitter,
+        address unipool,
+        uint256 amount0,
+        uint256 amount1,
+        uint256 fee0,
+        uint256 fee1
+    );
     /// @notice Uniswap position manager address
     address public UNI_POSITION_MANAGER =
         0xC36442b4a4522E871399CD717aBDD847Ab11FE88;
@@ -104,6 +121,13 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
         userPositionIds[msg.sender].push(_newPosition.positionId);
         positionList.push(_newPosition.positionId);
         totalPositions = totalPositions.add(1);
+
+        emit OpenPosition(
+            msg.sender,
+            _newPosition.positionId,
+            _newPosition.unipool,
+            _newPosition.provideTokenAmountAtStart
+        );
     }
 
     function getPositionTokenAmount(
@@ -235,6 +259,17 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
           positionList.pop();
           totalPositions = totalPositions.sub(1);
         }
+
+        emit ClosePosition(
+            _position.owner,
+            _positionId,
+            msg.sender,
+            _position.unipool,
+            token0Amount,
+            token1Amount,
+            token0FeeAmount,
+            token1FeeAmount
+        );
     }
 
     function _findPositionIndex(address _account, uint256 _positionId)

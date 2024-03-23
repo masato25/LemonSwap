@@ -8,10 +8,17 @@ module.exports = {
     hardhat: {
       forking: {
         url: `https://arb-mainnet.g.alchemy.com/v2/${alchemyKey}`,
-        blockNumber: 193100268,
+        // blockNumber: 193420109,
         // url: `https://rpc.ankr.com/optimism`,
         // blockNumber: 117789706
       },
+      chains: {
+        42161: {
+          hardforkHistory: {
+            london: 193401253
+          }
+        }
+      }
     },
     hh: {
       url: `http://0.0.0.0:8545`,

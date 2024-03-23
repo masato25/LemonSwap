@@ -25,6 +25,7 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
     /// @notice Uniswap v3 liquidity pool address
     address public uniswapPool;
 
+    uint256[] public positionList;
     uint256 totalPositions;
     /// @notice Uniswap position info
     mapping(uint256 => Positions.Position) public positions;
@@ -101,6 +102,7 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
 
         positions[_newPosition.positionId] = _newPosition;
         userPositionIds[msg.sender].push(_newPosition.positionId);
+        positionList.push(_newPosition.positionId);
         totalPositions = totalPositions.add(1);
     }
 
@@ -222,11 +224,15 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
         {
           // _removePositionAndReorder
           delete positions[_positionId];
-          uint256 positionIndex = _findPositionIndex(_position.owner, _positionId);
+          (uint256 positionIndex, uint256 positionListIndex) = _findPositionIndex(_position.owner, _positionId);
           userPositionIds[_position.owner][positionIndex] = userPositionIds[_position.owner][
               userPositionIds[_position.owner].length - 1
           ];
           userPositionIds[_position.owner].pop();
+          positionList[positionListIndex] = positionList[
+              positionList.length - 1
+          ];
+          positionList.pop();
           totalPositions = totalPositions.sub(1);
         }
     }
@@ -234,15 +240,23 @@ contract LemonSwap is ReentrancyGuardUpgradeable {
     function _findPositionIndex(address _account, uint256 _positionId)
         internal
         view
-        returns (uint256)
+        returns (uint256 mapIndex, uint256 sliceIndex)
     {
         uint256 positionLength = userPositionIds[_account].length;
         require(positionLength != 0, "02");
         for (uint256 i = 0; i < positionLength; i = i + 1) {
             if (userPositionIds[_account][i] == _positionId) {
-                return i;
+                mapIndex = i;
+                break;
             }
         }
-        revert("17");
+        uint256 positionListLength = positionList.length;
+        for (uint256 i = 0; i < positionListLength; i = i + 1) {
+            if (positionList[i] == _positionId) {
+                sliceIndex = i;
+                break;
+            }
+        }
+        return (mapIndex, sliceIndex);
     }
 }

@@ -6,7 +6,9 @@ import IUniswapV3Pool from "./artifacts/@uniswap/v3-core/contracts/interfaces/IU
 import "./App.css"
 import React, { useEffect } from "react";
 import BigNumber from "bignumber.js";
-import { ChakraProvider, NumberInput, NumberInputField, Select, Button, Slider, SliderTrack, SliderFilledTrack, SliderThumb } from '@chakra-ui/react'
+import { 
+  ChakraProvider, NumberInput, NumberInputField, Select, Button, Slider, SliderTrack, SliderFilledTrack,
+} from '@chakra-ui/react'
 
 import matamaskicon from './img/logo/matamaskicon.png';
 import oplogo from './img/logo/oplogo.png';
@@ -41,7 +43,7 @@ function TickToPrice(
 	return estimatePrice.toFixed(3);
 }
 
-function App() {
+function MainPage() {
   const [address, setAddress] = useState('');
   const [token0Balance, setToken0Balance] = useState(0);
   const [token1Balance, setToken1Balance] = useState(0);
@@ -196,11 +198,11 @@ function App() {
     let bigTick = new BigNumber(poolTick);
     let bigTickSpace = new BigNumber(tickSpace);
     if (selectTokenOffer === 'op') {
-      setSelectPoolLowerTick(bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace).toFixed(0));
-      setSelectPoolUpperTick(bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace.multipliedBy(3)).toFixed(0));
-    } else {
       setSelectPoolUpperTick(bigTick.minus(bigTick.mod(bigTickSpace)).minus(bigTickSpace).toFixed(0));
       setSelectPoolLowerTick(bigTick.minus(bigTick.mod(bigTickSpace)).minus(bigTickSpace.multipliedBy(3)).toFixed(0));
+    } else {
+      setSelectPoolLowerTick(bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace).toFixed(0));
+      setSelectPoolUpperTick(bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace.multipliedBy(3)).toFixed(0));
     }
     let price2 = TickToPrice(
       selectPoolUpperTick,
@@ -294,7 +296,7 @@ function App() {
         }
         const Contract = new ethers.Contract(contractAddress, LemonSwap.abi, Signer);
         console.log([uniswapPool, selectTokenOffer === 'op', approveAmount, poolTick, selectPoolUpperTick, selectPoolLowerTick]);
-        const Tx = await Contract.openPosition([uniswapPool, selectTokenOffer === 'op', approveAmount, selectPoolUpperTick, selectPoolLowerTick]);
+        const Tx = await Contract.openPosition([uniswapPool, true, approveAmount, -271560, -271680]);
         const TxRecit = await Tx.wait();
         console.log('after :', TxRecit);
       } else {
@@ -355,7 +357,6 @@ function App() {
             <p>Optimism / USDC 0.3%</p>
             current price: {poolPrice}
           </div>
-          <div>{poolTick}</div>
 
           {
             address ?
@@ -435,4 +436,4 @@ function App() {
   );
 }
 
-export default App;
+export default MainPage;

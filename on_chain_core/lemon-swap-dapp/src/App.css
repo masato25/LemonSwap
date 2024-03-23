@@ -1,0 +1,82 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.App {
+
+  margin: auto;
+  min-height: 100vh;
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.connectBtns,
+.actionBtns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.connectBtns {
+  gap: 20px;
+}
+
+.actionBtns {
+  gap: 30px;
+}
+.actionBtns > .btn {
+  padding: 10px 30px;
+}
+
+.btn {
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 10px 20px;
+  border: none;
+  font-size: 16px;
+  text-align: center;
+  text-transform: uppercase;
+  transition: 0.6s;
+  border-radius: 10px;
+  display: block;
+  background-size: 200% auto;
+}
+
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 50%;
+}
+
+.display {
+  border: 1px solid #2b8a3e;
+  border-radius: 10px;
+  min-height: 200px;
+  min-width: 500px;
+  margin: 20px auto;
+  padding: 40px 20px;
+  text-align: left;
+}
+
+.valueContainer {
+  margin-top: 32px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.key {
+  font-size: 20px;
+}
+
+.value {
+  font-size: 16px;
+}
+.minus,
+.plus {
+  font-size: 20px;
+}

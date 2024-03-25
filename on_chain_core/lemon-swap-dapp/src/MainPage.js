@@ -197,22 +197,27 @@ function MainPage() {
     setSelectTokenOffer(event.target.value);
     let bigTick = new BigNumber(poolTick);
     let bigTickSpace = new BigNumber(tickSpace);
+    let tmp0, tmp1;
     if (selectTokenOffer === 'op') {
-      setSelectPoolUpperTick(bigTick.minus(bigTick.mod(bigTickSpace)).minus(bigTickSpace).toFixed(0));
-      setSelectPoolLowerTick(bigTick.minus(bigTick.mod(bigTickSpace)).minus(bigTickSpace.multipliedBy(3)).toFixed(0));
+      tmp0 = bigTick.minus(bigTick.mod(bigTickSpace)).minus(bigTickSpace).toFixed(0)
+      tmp1 = bigTick.minus(bigTick.mod(bigTickSpace)).minus(bigTickSpace.multipliedBy(3)).toFixed(0)
+      setSelectPoolUpperTick(tmp0);
+      setSelectPoolLowerTick(tmp1);
     } else {
-      setSelectPoolLowerTick(bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace).toFixed(0));
-      setSelectPoolUpperTick(bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace.multipliedBy(3)).toFixed(0));
+      tmp0 = bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace).toFixed(0)
+      tmp1 = bigTick.minus(bigTick.mod(bigTickSpace)).plus(bigTickSpace.multipliedBy(3)).toFixed(0)
+      setSelectPoolLowerTick(tmp0);
+      setSelectPoolUpperTick(tmp1);
     }
     let price2 = TickToPrice(
-      selectPoolUpperTick,
+      tmp0,
       token1Decimal,
       token0Decimal,
       false,
     );
     setSelectPoolUpperPrice(price2);
     let price3 = TickToPrice(
-      selectPoolLowerTick,
+      tmp1,
       token1Decimal,
       token0Decimal,
       false,

@@ -270,6 +270,8 @@ function MainPage() {
         const Contract = new ethers.Contract(approveTokenAddr, IERC20.abi, Signer);
         const Tx = await Contract.approve(contractAddress, approveAmount);
         const TxRecit = await Tx.wait();
+        await connectToMetaMask();
+        setSubmitCheck(1);
         console.log('after :', TxRecit);
       } else {
         console.error(
